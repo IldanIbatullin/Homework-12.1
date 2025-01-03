@@ -1,10 +1,9 @@
-import requests
 import os
+import requests
 from dotenv import load_dotenv
 load_dotenv()
 
 api_key = os.getenv('API_KEY')
-
 
 # Модуль для работы с внешним API
 class ExternalAPI:

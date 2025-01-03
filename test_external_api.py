@@ -1,6 +1,6 @@
 
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from external_api import convert_to_rub, ExternalAPI
 
 
@@ -9,14 +9,17 @@ class TestExternalAPI(unittest.TestCase):
     @patch('external_api.requests.request')
     def test_get_exchange_rates_success(self, mock_request):
         """Тест успешного получения курсов валют."""
-        mock_request.return_value.status_code = 200
-        mock_request.return_value.json.return_value = {
+        # Настройка мок-ответа
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
             "success": True,
             "rates": {
                 "USD": 75.0,
                 "EUR": 85.0
             }
         }
+        mock_request.return_value = mock_response
 
         rates = ExternalAPI.get_exchange_rates()
         self.assertEqual(rates["rates"]["USD"], 75.0)
@@ -25,7 +28,10 @@ class TestExternalAPI(unittest.TestCase):
     @patch('external_api.requests.request')
     def test_get_exchange_rates_failure(self, mock_request):
         """Тест обработки ошибки при получении курсов валют."""
-        mock_request.return_value.status_code = 500
+        # Настройка мок-ответа с ошибкой
+        mock_response = MagicMock()
+        mock_response.status_code = 500
+        mock_request.return_value = mock_response
 
         with self.assertRaises(Exception) as context:
             ExternalAPI.get_exchange_rates()
@@ -35,6 +41,7 @@ class TestExternalAPI(unittest.TestCase):
     @patch('external_api.ExternalAPI.get_exchange_rates')
     def test_convert_usd_to_rub(self, mock_get_exchange_rates):
         """Тест конвертации USD в RUB."""
+        # Настройка возврата курсов валют
         mock_get_exchange_rates.return_value = {
             "success": True,
             "rates": {
@@ -53,11 +60,12 @@ class TestExternalAPI(unittest.TestCase):
         }
 
         result = convert_to_rub(transaction)
-        self.assertEqual(result, 1333.33)  # 100 / (1/75.0)
+        self.assertAlmostEqual(result, 1333.33)  # 100 / (1/75.0)
 
     @patch('external_api.ExternalAPI.get_exchange_rates')
     def test_convert_eur_to_rub(self, mock_get_exchange_rates):
         """Тест конвертации EUR в RUB."""
+        # Настройка возврата курсов валют
         mock_get_exchange_rates.return_value = {
             "success": True,
             "rates": {
@@ -76,7 +84,7 @@ class TestExternalAPI(unittest.TestCase):
         }
 
         result = convert_to_rub(transaction)
-        self.assertEqual(result, 1176.47)  # 100 / (1/85.0)
+        self.assertAlmostEqual(result, 1176.47)  # 100 / (1/85.0)
 
     def test_convert_rub(self):
         """Тест, когда валюта уже в RUB."""
