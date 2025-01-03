@@ -1,9 +1,11 @@
 import os
 import requests
 from dotenv import load_dotenv
+
 load_dotenv()
 
-api_key = os.getenv('API_KEY')
+api_key = os.getenv("API_KEY")
+
 
 # Модуль для работы с внешним API
 class ExternalAPI:
@@ -18,19 +20,19 @@ class ExternalAPI:
         """
         url = f"https://api.apilayer.com/fixer/latest?symbols=EUR,USD&base=RUB"
         payload = {}
-        headers = {
-            "apikey": api_key
-        }
+        headers = {"apikey": api_key}
 
         response = requests.request("GET", url, headers=headers, data=payload)
 
         # Проверка на успешность запроса
         if response.status_code != 200:
-            raise Exception(f"API request failed with status code {response.status_code}")
+            raise Exception(
+                f"API request failed with status code {response.status_code}"
+            )
 
         data = response.json()
 
-        if not data.get('success'):
+        if not data.get("success"):
             raise Exception(f"Error: {data['error']['type']}")
 
         return data
@@ -51,7 +53,7 @@ def convert_to_rub(data):
         currency = data["operationAmount"]["currency"]["code"]
 
         # Если валюта уже в рублях, возвращаем сумму
-        if currency == 'RUB':
+        if currency == "RUB":
             return float(amount)
 
         # Получаем курсы валют

@@ -1,5 +1,6 @@
 import json
 
+
 def load_transactions(file_path):
     """
     Загружает данные о транзакциях из JSON-файла.
@@ -10,7 +11,6 @@ def load_transactions(file_path):
     :raises FileNotFoundError: Если файл не найден.
     :raises json.JSONDecodeError: Если файл содержит некорректные данные JSON.
     """
-    with open(file_path, encoding='utf-8') as f:
+    with open(file_path, encoding="utf-8") as f:
         data = json.load(f)  # Загружаем данные из файла в формате JSON
     return data
-
