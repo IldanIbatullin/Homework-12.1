@@ -1,6 +1,8 @@
 import os
 import requests
 from dotenv import load_dotenv
+from utils import load_json_file
+from utils import json
 
 load_dotenv()
 
@@ -18,24 +20,24 @@ class ExternalAPI:
                  а значения — их курсы относительно рубля.
         :raises Exception: Если запрос к API не удался или если ответ не успешен.
         """
-        url = f"https://api.apilayer.com/fixer/latest?symbols=EUR,USD&base=RUB"
-        payload = {}
+        url = "https://api.apilayer.com/fixer/latest?symbols=EUR,USD&base=RUB"
         headers = {"apikey": api_key}
 
-        response = requests.request("GET", url, headers=headers, data=payload)
+        try:
+            response = requests.get(url, headers=headers)  # Используем метод GET
+            response.raise_for_status()  # Проверка на ошибки HTTP
 
-        # Проверка на успешность запроса
-        if response.status_code != 200:
-            raise Exception(
-                f"API request failed with status code {response.status_code}"
-            )
+            data = response.json()
 
-        data = response.json()
+            if not data.get("success"):
+                raise Exception(f"Error: {data['error']['type']}")
 
-        if not data.get("success"):
-            raise Exception(f"Error: {data['error']['type']}")
+            return data["rates"]  # Возвращаем только курсы валют
 
-        return data
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"Ошибка при обращении к API: {e}")
+        except json.JSONDecodeError:
+            raise Exception("Ошибка декодирования ответа от API.")
 
 
 # Функция для конвертации суммы в рубли
@@ -57,10 +59,26 @@ def convert_to_rub(data):
             return float(amount)
 
         # Получаем курсы валют
-        exchange_rates = ExternalAPI.get_exchange_rates()
+        try:
+            exchange_rates = ExternalAPI.get_exchange_rates()
+        except Exception as e:
+            print(f"Не удалось получить курсы валют: {e}")
+            return None  # Или можно вернуть 0.0 или другое значение по умолчанию
 
         # Конвертация в рубли
-        if currency in exchange_rates["rates"]:
-            return float(amount) / float(exchange_rates["rates"][currency])
+        if currency in exchange_rates:
+            return float(amount) / float(exchange_rates[currency])
 
     raise ValueError("Unsupported currency or missing operationAmount.")
+
+
+# Пример использования функции загрузки JSON и конвертации валюты
+if __name__ == "__main__":
+    transaction_data = load_json_file("transaction_data.json")  # Замените на ваш файл
+
+    try:
+        rub_amount = convert_to_rub(transaction_data)
+        if rub_amount is not None:
+            print(f"Сумма в рублях: {rub_amount:.2f} RUB")
+    except ValueError as ve:
+        print(f"Ошибка конвертации: {ve}")
