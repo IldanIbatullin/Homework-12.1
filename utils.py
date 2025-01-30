@@ -1,16 +1,21 @@
 import json
 
 
-def load_transactions(file_path):
+def load_json_file(file_path):
     """
-    Загружает данные о транзакциях из JSON-файла.
+    Загружает данные из JSON-файла.
 
-    :param file_path: Путь к JSON-файлу с данными о транзакциях.
-    :return: Список словарей с данными о транзакциях, если файл существует и содержит список,
-             иначе пустой список.
-    :raises FileNotFoundError: Если файл не найден.
-    :raises json.JSONDecodeError: Если файл содержит некорректные данные JSON.
+    :param file_path: Путь к файлу.
+    :return: Содержимое файла как словарь, или пустой список в случае ошибки.
     """
-    with open(file_path, encoding="utf-8") as f:
-        data = json.load(f)  # Загружаем данные из файла в формате JSON
-    return data
+    try:
+        with open(file_path, "r") as file:
+            return json.load(file)
+    except FileNotFoundError:
+        print(f"Файл не найден: {file_path}. Возвращаем пустой список.")
+        return []
+    except json.JSONDecodeError:
+        print(
+            f"Ошибка декодирования JSON в файле: {file_path}. Возвращаем пустой список."
+        )
+        return []
